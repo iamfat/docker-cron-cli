@@ -45,16 +45,17 @@ def main():
             tab = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError, e:
             continue
-        
+
         if tab == '': continue;
         
-        cron = crontab.CronTab(tab=tab, user=False)
+        cron = crontab.CronTab(tab=unicode(tab, 'utf8'), user=False)
         # cron.write()
+        print("################# DOCKER CRON FOR %s #################" % container)
         for job in cron:
             job.set_command("docker exec %s sh -c '%s'" % (container, job.command.replace("'", "'\\''")))
-
-        print("################# DOCKER CRON FOR %s #################" % container)
-        print(cron)
+            print(job.render())
+        # print(cron.render())
+        print("")
 
 if __name__ == "__main__":
     main()
