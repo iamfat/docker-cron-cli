@@ -5,9 +5,7 @@ import getopt
 import crontab
 
 def usage():
-    print "Usage: docker-cron -c <config-file> <zmq-address>\n"
-    print "    <config-file>: path to config file in YAML format, e.g. /etc/debade/courier.yml"
-    print "    <zmq-address>: ZeroMQ address to listen, e.g. ipc:///path/to/ipc, tcp://0.0.0.0:3333"
+    print "Usage: docker-cron [container1 container2 ...] [-h]\n"
 
 def main():
 
@@ -52,7 +50,12 @@ def main():
         # cron.write()
         print("################# DOCKER CRON FOR %s #################" % container)
         for job in cron:
-            job.set_command("docker exec %s sh -c '%s'" % (container, job.command.replace("'", "'\\''")))
+            user = job.user
+            job.user = "root"
+            command = "docker exec {container} sudo -u {user} sh -c '{command}'"
+            job.set_command(command.format(
+                container=container, user=user, 
+                command=job.command.replace("'", "'\\''")))
             print(job.render())
         # print(cron.render())
         print("")
