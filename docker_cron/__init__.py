@@ -40,13 +40,13 @@ def main():
         # if container == '': continue
         try:
             cmd = ("docker exec %s sh -lc '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'" % container)
-            tab = subprocess.check_output(cmd, shell=True)
+            tab = subprocess.check_output(cmd, shell=True).replace('\t', ' ')
         except subprocess.CalledProcessError, e:
             continue
 
         if tab == '': continue;
         
-        cron = crontab.CronTab(tab=unicode(tab, 'utf8'), user=False)
+        cron = crontab.CronTab(tab=tab, user=False)
         # cron.write()
         print("################# DOCKER CRON FOR %s #################" % container)
         for job in cron:
