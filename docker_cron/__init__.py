@@ -39,7 +39,7 @@ def main():
     for container in containers:
         # if container == '': continue
         try:
-            cmd = ("docker exec %s sh -lc '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'" % container)
+            cmd = ("docker exec -t %s sh -lc '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'" % container)
             tab = subprocess.check_output(cmd, shell=True).replace('\t', ' ')
         except subprocess.CalledProcessError, e:
             continue
@@ -50,11 +50,14 @@ def main():
         # cron.write()
         print("################# DOCKER CRON FOR %s #################" % container)
         for job in cron:
-            user = job.user
+            if job.user == "root":
+                sudo = ""
+            else:
+                sudo = " sudo -u " + job.user
             job.user = "root"
-            command = "docker exec {container} sudo -u {user} sh -lc '{command}'"
+            command = "docker exec {container}{sudo} sh -lc '{command}'"
             job.set_command(command.format(
-                container=container, user=user, 
+                container=container, sudo=sudo, 
                 command=job.command.replace("'", "'\\''")))
             print(job.render())
         # print(cron.render())
