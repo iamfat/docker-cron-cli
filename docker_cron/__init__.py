@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import subprocess, sys
+import subprocess
+import sys
 import getopt
 import crontab
 
@@ -8,8 +9,6 @@ def usage():
     print "Usage: docker-cron [container1 container2 ...] [-h]\n"
 
 def main():
-
-    # docker-cron [container1 container2 ...] [-h]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "h")
