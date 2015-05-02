@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='docker-cron',
 
-    version='0.1.8',
+    version='0.1.9',
 
     description='Docker Cron',
 

@@ -31,17 +31,24 @@ def main():
         # enumerate all containers via `docker ps`
         try:
             containers = subprocess.check_output("docker ps -q", shell=True).splitlines()
-        except subprocess.CalledProcessError, e:
+            def readable_name(container):
+                try:
+                    return subprocess.check_output(
+                                "docker inspect -f {{.Name}} %s" % container,
+                                shell=True).lstrip('/').rstrip('\n')
+                except subprocess.CalledProcessError as e:
+                    return container
+            containers = map(readable_name, containers)
+        except subprocess.CalledProcessError as e:
             print ("%r" % str(e))
             sys.exit()
 
-    
     for container in containers:
         # if container == '': continue
         try:
             cmd = ("docker exec -t %s sh -lc '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'" % container)
             tab = subprocess.check_output(cmd, shell=True).replace('\t', ' ')
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             continue
 
         if tab == '': continue;
