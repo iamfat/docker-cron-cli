@@ -61,7 +61,7 @@ def main():
             else:
                 sudo = " sudo -u " + job.user
             job.user = "root"
-            command = "docker exec {container}{sudo} sh -lc '{command}'"
+            command = "docker exec -t {container}{sudo} sh -lc '{command}'"
             job.set_command(command.format(
                 container=container, sudo=sudo, 
                 command=job.command.replace("'", "'\\''")))
