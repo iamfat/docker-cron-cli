@@ -1,17 +1,26 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import print_function
 
 import subprocess
 import sys
 import getopt
-import crontab
+
+from crontab import CronTab
+from docker import Client
+
+__version__ = '0.1.12'
 
 def usage():
-    print "Usage: docker-cron [container1 container2 ...] [-h]\n"
+    print("Usage: docker-cron [container1 container2 ...] [-h]")
 
 def main():
 
+    cli = Client()
+
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h")
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "h")
     except getopt.GetoptError as e:
         # print help information and exit:
         usage()
@@ -24,37 +33,21 @@ def main():
         else:
             assert False, "unhandled option"
     
-    if len(args) > 0:
-        containers = args
+    if len(args) == 0:
+        containers = map(lambda c: c['Names'][0][1:], cli.containers())
     else:
-        # enumerate all containers via `docker ps`
-        try:
-            containers = subprocess.check_output("docker ps -q", shell=True).splitlines()
-            def readable_name(container):
-                try:
-                    return subprocess.check_output(
-                                "docker inspect -f {{.Name}} %s" % container,
-                                shell=True).lstrip('/').rstrip('\n')
-                except subprocess.CalledProcessError as e:
-                    return container
-            containers = map(readable_name, containers)
-        except subprocess.CalledProcessError as e:
-            print ("%r" % str(e))
-            sys.exit()
+        containers = args
 
     for container in containers:
-        # if container == '': continue
-        try:
-            cmd = ("docker exec -t %s sh -lc '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'" % container)
-            tab = subprocess.check_output(cmd, shell=True).replace('\t', ' ')
-        except subprocess.CalledProcessError as e:
+        cmd = "sh -lc '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'"
+        exec_id = cli.exec_create(container=container, cmd=cmd, tty=True)['Id']
+        tab = cli.exec_start(exec_id=exec_id, tty=True).replace('\t', ' ')
+        if tab == '':
             continue
 
-        if tab == '': continue;
-        
-        cron = crontab.CronTab(tab=tab, user=False)
+        cron = CronTab(tab=tab, user=False)
         # cron.write()
-        print("################# DOCKER CRON FOR %s #################" % container)
+        print("################# DOCKER CRON FOR {container} #################".format(container=container))
         for job in cron:
             if job.user == "root":
                 sudo = ""
