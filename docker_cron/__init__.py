@@ -8,7 +8,7 @@ import sys
 import getopt
 
 from crontab import CronTab
-from docker import Client
+from docker import APIClient
 
 __version__ = '0.1.12'
 
@@ -17,7 +17,7 @@ def usage():
 
 def main():
 
-    cli = Client()
+    cli = APIClient()
 
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h")
