@@ -10,7 +10,7 @@ import getopt
 from crontab import CronTab
 from docker import APIClient
 
-__version__ = '0.1.12'
+__version__ = '0.2.0'
 
 def usage():
     print("Usage: docker-cron [container1 container2 ...] [-h]")
