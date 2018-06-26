@@ -2,22 +2,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import subprocess
 import sys
 import getopt
+import docker
 
 from crontab import CronTab
-from docker import APIClient
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 def usage():
     print("Usage: docker-cron [container1 container2 ...] [-h]")
 
 def main():
 
-    cli = APIClient()
+    cli = docker.from_env()
 
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h")
@@ -34,20 +35,20 @@ def main():
             assert False, "unhandled option"
     
     if len(args) == 0:
-        containers = map(lambda c: c['Names'][0][1:], cli.containers())
+        containers = cli.containers.list(all=True)
     else:
-        containers = args
+        containers = map(lambda nm: cli.containers.get(nm), args)
 
     for container in containers:
-        cmd = "sh -lc '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'"
-        exec_id = cli.exec_create(container=container, cmd=cmd, tty=True)['Id']
-        tab = cli.exec_start(exec_id=exec_id, tty=True).replace('\t', ' ')
+        cmd = "sh -c '[ -d /etc/cron.d ] && find /etc/cron.d -type f -exec cat \{\} \;'"
+        exit_code, output = container.exec_run(cmd=cmd, stderr=False, tty=True)
+        tab = output.decode().replace('\t', ' ')
         if tab == '':
             continue
 
         cron = CronTab(tab=tab, user=False)
         # cron.write()
-        print("################# DOCKER CRON FOR {container} #################".format(container=container))
+        print("################# DOCKER CRON FOR {container} #################".format(container=container.name))
         for job in cron:
             if job.user == "root":
                 sudo = ""
@@ -56,7 +57,7 @@ def main():
             job.user = "root"
             command = "docker exec -t {container}{sudo} sh -lc '{command}'"
             job.set_command(command.format(
-                container=container, sudo=sudo, 
+                container=container.name, sudo=sudo, 
                 command=job.command.replace("'", "'\\''")))
             print(job.render())
         # print(cron.render())
