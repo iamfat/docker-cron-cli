@@ -25,16 +25,15 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 install_requires = [
-    'requests >= 2.6.1, < 2.8',
     'docker',
     'python-crontab'
 ]
 
 setup(
-    name='docker-cron',
+    name='docker-cron-cli',
     version=find_version("docker_cron", "__init__.py"),
     description='Extract Crontab Info from Docker Containers',
-    url='https://github.com/iamfat/docker-cron',
+    url='https://github.com/iamfat/docker-cron-cli',
     author="Jia Huang",
     author_email="iamfat@gmail.com",
     license='MIT',
