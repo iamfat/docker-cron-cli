@@ -11,7 +11,7 @@ import docker
 
 from crontab import CronTab
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 def usage():
     print("Usage: docker-cron [container1 container2 ...] [-h]")
